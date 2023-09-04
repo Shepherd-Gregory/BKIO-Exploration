@@ -70,7 +70,7 @@ for i = 1:length(scanAngle)
             [ix,iy] = ind2sub([param.M,param.N],V_ray(j));
             dist = (1/param.resol)*norm([ix_robot,iy_robot] - [ix,iy]);
             pz = beamSensorModel_new(dist, meas_range/param.resol, param);
-            pc = pz;
+            pc = pz * f;
             vec_scm(j) = pc;
             eta = eta + pc;
         end
