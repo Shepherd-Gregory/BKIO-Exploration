@@ -167,7 +167,9 @@ while ~isempty(action_track) && iteration < param.loopnum
         Y_train = action_CRMI(X_train, B, L, ENT0, sensor, param);
     
         % GPBO
-        [action_best,MI_best,infer_time] = bayesian_optimization_crm(candidate_list, X_train,Y_train, B, L, ENT0, sensor, param, MI_GT);
+%         [action_best,MI_best,infer_time] = bayesian_optimization_crm(candidate_list, X_train,Y_train, B, L, ENT0, sensor, param, MI_GT);
+        % BKIO
+        [action_best,MI_best,infer_time] = bki_optimization_crm(candidate_list, X_train,Y_train, B, L, ENT0, sensor, param, MI_GT);
 
     end
     per_infer_time = [per_infer_time; infer_time];

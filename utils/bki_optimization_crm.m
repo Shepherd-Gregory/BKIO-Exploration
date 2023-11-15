@@ -1,4 +1,4 @@
-function [action_best,MI_best,infer_time] = bayesian_optimization_crm(candidate_list,X_train,Y_train, B, L, ENT0, sensor, param, MI_update_list)
+function [action_best,MI_best,infer_time] = bki_optimization_crm(candidate_list,X_train,Y_train, B, L, ENT0, sensor, param, MI_update_list)
 %{  
     Copyright (C) 2021  Yang Xu (xuyangxtu@foxmail.com)
     This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,6 @@ phi = [1;2.5]; % kernel params: length_scale=1.0, std=2.5
 beta = 1; % trade off "exploration" and "exploitation"
 n_epoch = param.Nepoch; 
 
-USE_GPR = 1;
-
 % set sample numbers
 num_candies = length(candidate_list(:,1));
 action_best = [];
@@ -26,14 +24,15 @@ per_infer_time = [];
 %% traning the GP model
 for i = 1:n_epoch
     tic
-    % costom sparse kernel function (plz refer to : https://ww2.mathworks.cn/help/stats/fitrgp.html#buz_843-7)
-    gpr = fitrgp(X_train,Y_train,'KernelFunction','matern52','KernelParameters',phi);
-    % [ypred,ysd,yint] = predict(gprMdl,Xnew) also returns the standard deviations ysd and 95% prediction intervals yint
-    % of the response variable, evaluated at each observation in Xnew using the trained GPR model.
-    [mu, std1, yint] = predict(gpr, candidate_list);
-    mu(mu<0)=0; %
-    %  cal acquisition function (Ucb), Eq.(4)
-    acquisition = beta * std1(1:num_candies) + mu(1:num_candies);
+    Ks = matern_kernel(X_train,candidate_list);
+    ybar = Ks * Y_train; 
+    kbar = sum(Ks,2); 
+    mu = ybar./kbar; % exp of posterior distribution
+    mu(mu<0)=0;
+    var = 100 ./kbar;  % var of posterior distribution
+    std = var.^0.5;
+    %  cal UCB function
+    acquisition = beta * std(1:num_candies) + mu(1:num_candies);
     % sort
     [max_acq, candidate_with_max_acq_index] = max(acquisition);
     candidate_with_max_acq = candidate_list(candidate_with_max_acq_index,:);
